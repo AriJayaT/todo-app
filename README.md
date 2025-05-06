@@ -1,6 +1,6 @@
 # Todo-list Application
 
-A full-stack Todo-list application built with React (Vite), Node.js (Express), MongoDB, and Sequelize ORM. The application features user authentication, session management, and comprehensive API documentation with Swagger.
+A full-stack Todo-list application built with React (Vite), Node.js (Express), and MongoDB Atlas. The application features user authentication, session management, and comprehensive API documentation with Swagger.
 
 ## Features
 
@@ -9,7 +9,7 @@ A full-stack Todo-list application built with React (Vite), Node.js (Express), M
 - Todo-list management (create, read, update, delete)
 - User profile management
 - REST API with Express
-- MongoDB database with Sequelize ORM
+- MongoDB Atlas cloud database integration
 - API documentation with Swagger
 - Responsive UI with purple and black color scheme
 
@@ -52,8 +52,8 @@ todo-app/
 ### Prerequisites
 
 - Node.js (v14 or higher)
-- MongoDB
 - npm or yarn
+- MongoDB Atlas account
 
 ### Installation
 
@@ -79,30 +79,22 @@ todo-app/
    ```
    PORT=5000
    NODE_ENV=development
-   MONGODB_URI=mongodb://localhost:27017/todo-app
+   MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority
    JWT_SECRET=todo-app-secret-key
    SESSION_SECRET=todo-app-session-secret
    CLIENT_URL=http://localhost:5173
-   DB_HOST=localhost
-   DB_USER=root
-   DB_PASSWORD=
-   DB_NAME=todo_app
    ```
 
-### Database Setup
+   - Replace the MongoDB URI with your actual MongoDB Atlas connection string
 
-1. Make sure MongoDB is running on your system
-   ```bash
-   # Check MongoDB status
-   mongo --eval "db.adminCommand('ping')"
-   ```
+### MongoDB Atlas Setup
 
-2. If MongoDB is not installed, follow the instructions for your operating system:
-   - [Install MongoDB on Windows](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/)
-   - [Install MongoDB on macOS](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/)
-   - [Install MongoDB on Linux](https://docs.mongodb.com/manual/administration/install-on-linux/)
-
-3. The application will automatically create the necessary collections when it first runs
+1. Create a MongoDB Atlas account at [https://www.mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
+2. Create a new cluster (the free tier is sufficient for development)
+3. Set up a database user with read/write permissions
+4. Configure network access (allow access from your IP address or from anywhere for development)
+5. Get your connection string from the "Connect" button on your cluster dashboard
+6. Replace the placeholders in the connection string with your actual credentials
 
 ### Running the Application
 
@@ -111,6 +103,7 @@ todo-app/
    cd server
    npm run dev
    ```
+   You should see "MongoDB Atlas connected successfully" in the console
 
 2. Start the frontend development server
    ```bash
@@ -121,112 +114,174 @@ todo-app/
 3. Access the application at `http://localhost:5173`
 4. Access the API documentation at `http://localhost:5000/api-docs`
 
-## Usage
+## API Design
+
+The application provides a RESTful API with the following endpoints:
 
 ### Authentication
 
-1. Register a new account from the registration page
-2. Login with your credentials
-3. Once logged in, you'll be redirected to the dashboard
+| Method | Endpoint | Description | Request Body | Response | Authentication |
+|--------|----------|-------------|--------------|----------|---------------|
+| POST | `/api/auth/register` | Register a new user | `{ username, email, password, firstName?, lastName? }` | `{ message, user, token }` | No |
+| POST | `/api/auth/login` | Login a user | `{ email, password }` | `{ message, user, token }` | No |
+| GET | `/api/auth/logout` | Logout a user | - | `{ message }` | No |
+| GET | `/api/auth/me` | Get current user | - | `{ user }` | Yes |
 
 ### Todo Management
 
-1. Navigate to the Todo List page
-2. Add new todos using the "Add Todo" button
-3. Edit, delete, or mark todos as completed
-4. Filter todos by status (All, Active, Completed)
-5. View todo details by clicking on a todo item
+| Method | Endpoint | Description | Request Body | Response | Authentication |
+|--------|----------|-------------|--------------|----------|---------------|
+| GET | `/api/todos` | Get all todos for current user | - | `{ todos: [Todo] }` | Yes |
+| POST | `/api/todos` | Create a new todo | `{ title, description?, dueDate?, priority? }` | `{ message, todo }` | Yes |
+| GET | `/api/todos/:id` | Get a todo by ID | - | `{ todo }` | Yes |
+| PUT | `/api/todos/:id` | Update a todo | `{ title?, description?, completed?, dueDate?, priority? }` | `{ message, todo }` | Yes |
+| DELETE | `/api/todos/:id` | Delete a todo | - | `{ message }` | Yes |
 
 ### User Profile
 
-1. Navigate to the Profile page
-2. Update your profile information
-3. Change your password
+| Method | Endpoint | Description | Request Body | Response | Authentication |
+|--------|----------|-------------|--------------|----------|---------------|
+| GET | `/api/users/profile` | Get user profile | - | `{ user }` | Yes |
+| PUT | `/api/users/profile` | Update user profile | `{ username?, email?, firstName?, lastName?, password? }` | `{ message, user }` | Yes |
 
-## API Endpoints
+### Data Models
+
+#### User Model
+
+```javascript
+{
+  _id: ObjectId,
+  username: String,
+  email: String,
+  password: String,  // Hashed
+  firstName: String, // Optional
+  lastName: String,  // Optional
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+#### Todo Model
+
+```javascript
+{
+  _id: ObjectId,
+  title: String,
+  description: String, // Optional
+  completed: Boolean,  // Default: false
+  dueDate: Date,       // Optional
+  priority: String,    // "low", "medium", or "high", Default: "medium"
+  user: ObjectId,      // Reference to User
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
 ### Authentication
 
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login a user
-- `GET /api/auth/logout` - Logout a user
-- `GET /api/auth/me` - Get current user information
+The API uses JWT (JSON Web Token) for authentication. After a successful login or registration, the server:
 
-### Todo List
+1. Returns a JWT token in the response
+2. Sets the token as an HTTP-only cookie
+3. Establishes a session
 
-- `GET /api/todos` - Get all todos for the current user
-- `POST /api/todos` - Create a new todo
-- `GET /api/todos/:id` - Get a todo by ID
-- `PUT /api/todos/:id` - Update a todo by ID
-- `DELETE /api/todos/:id` - Delete a todo by ID
+For protected endpoints, include the token in one of these ways:
+- As a cookie (set automatically by the browser)
+- In an Authorization header: `Authorization: Bearer <token>`
 
-### User Profile
+### Error Handling
 
-- `GET /api/users/profile` - Get user profile
-- `PUT /api/users/profile` - Update user profile
+All API endpoints return appropriate HTTP status codes:
 
-## Technologies Used
+- `200/201`: Success
+- `400`: Bad request or validation error
+- `401`: Unauthorized (invalid or missing token)
+- `404`: Resource not found
+- `500`: Server error
 
-### Frontend
-- React (Vite)
-- React Router
-- Axios
-- TailwindCSS
+Error responses have this format:
+```javascript
+{
+  message: "Error description",
+  errors: [...]  // For validation errors
+}
+```
 
-### Backend
-- Node.js
-- Express
-- MongoDB
-- Sequelize ORM
-- JSON Web Tokens (JWT)
-- Express Session
-- Cookie Parser
-- Swagger UI Express
+## After Successfully Connecting to MongoDB Atlas
 
-## Security Features
+Here are the next steps:
 
-1. Password hashing with bcrypt
-2. JWT authentication
-3. Session management with cookies
-4. Protected routes
-5. Input validation and sanitization
-6. CORS configuration
+### 1. Register an Account on the App
+
+1. Open your browser and navigate to `http://localhost:5173`
+2. Click on "Register" or navigate to the registration page
+3. Create a new account by providing:
+   - Username
+   - Email
+   - Password
+   - (Optional) First name and last name
+4. Submit the form to create your account
+
+### 2. Login to the App
+
+1. After registration, you'll be redirected to the login page (or click "Login")
+2. Enter your email and password
+3. Click "Login" to authenticate
+4. Upon successful login, you'll be redirected to the dashboard
+
+### 3. Create Your First Todo
+
+1. From the dashboard, click on "Todo List" in the navigation menu
+2. Click the "+ Add Todo" button
+3. Fill in the todo details:
+   - Title (required)
+   - Description (optional)
+   - Due date (optional)
+   - Priority (low, medium, high)
+4. Click "Add Todo" to create your first task
+5. Your new todo will appear in the list
+
+### 4. Manage Your Todos
+
+- **View Todo Details**: Click on a todo to expand its details
+- **Edit Todo**: Click the edit (pencil) icon to modify a todo
+- **Delete Todo**: Click the delete (trash) icon to remove a todo
+- **Mark as Complete**: Click the checkbox next to a todo to toggle its completion status
+- **Filter Todos**: Use the "All", "Active", and "Completed" buttons to filter your todos
+
+### 5. Update Your Profile
+
+1. Click on "Profile" in the navigation menu
+2. View your profile information
+3. Click "Update Profile" to open the profile editor
+4. Update your information as needed:
+   - Username
+   - Email
+   - First name
+   - Last name
+   - Password (leave blank to keep current)
+5. Click "Update Profile" to save your changes
+
+## Troubleshooting
+
+- **MongoDB Connection Issues**: Double-check your connection string and make sure your IP address is in the allowed list in MongoDB Atlas
+- **API Errors**: Check the server logs for detailed error messages
+- **Frontend Errors**: Check the browser console for JavaScript errors
 
 ## Deployment
 
-### Frontend Deployment
+When you're ready to deploy your application:
 
-1. Build the frontend
+1. Build the frontend:
    ```bash
    cd client
    npm run build
    ```
 
-2. The build files will be in the `dist` directory, which can be deployed to any static hosting service like Netlify, Vercel, or GitHub Pages
+2. Deploy the backend to a hosting service like Heroku, Render, or AWS
 
-### Backend Deployment
-
-1. Deploy to a Node.js hosting service like Heroku, Render, or AWS
-2. Set the environment variables in your hosting service dashboard
-3. Set up a MongoDB Atlas cluster for the database in production
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Make sure to set the environment variables in your hosting service dashboard
 
 ## License
 
 This project is licensed under the MIT License.
-
-## Acknowledgments
-
-- [React Documentation](https://reactjs.org/)
-- [Express Documentation](https://expressjs.com/)
-- [MongoDB Documentation](https://docs.mongodb.com/)
-- [Sequelize Documentation](https://sequelize.org/)
-- [TailwindCSS Documentation](https://tailwindcss.com/)
-- [JWT Documentation](https://jwt.io/)

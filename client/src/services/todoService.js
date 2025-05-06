@@ -40,7 +40,7 @@ export const getTodoById = async (id) => {
 // Update a todo by ID
 export const updateTodo = async (id, todoData) => {
   try {
-    // Add this validation
+    // Important: Make sure the ID is valid
     if (!id) {
       throw new Error('Todo ID is required');
     }
@@ -48,6 +48,7 @@ export const updateTodo = async (id, todoData) => {
     const response = await api.put(`/todos/${id}`, todoData);
     return response.data.todo;
   } catch (error) {
+    console.error('Update Todo Error:', error);
     throw new Error(error.response?.data?.message || 'Failed to update todo');
   }
 };

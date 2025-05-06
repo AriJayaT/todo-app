@@ -50,45 +50,91 @@ const TodoList = () => {
   };
 
   // Update a todo
-  const handleUpdateTodo = async (id, todoData) => {
+  const handleUpdateTodo = async (id, updatedData) => {
     try {
-      setLoading(true);
-      const updatedTodo = await updateTodo(id, todoData);
-      setTodos(todos.map(todo => (todo.id === id ? updatedTodo : todo)));
+      console.log('Updating todo with ID:', id);
+      console.log('Update data:', updatedData);
+      
+      // Make sure id is defined
+      if (!id) {
+        throw new Error('Todo ID is missing');
+      }
+
+      const updatedTodo = await updateTodo(id, updatedData);
+      console.log('Successfully updated todo:', updatedTodo);
+      
+      // Update the state with the updated todo
+      setTodos(todos.map(todo => 
+        (todo._id === id || todo.id === id) ? updatedTodo : todo
+      ));
+      
+      // Close the form after successful update
+      setShowAddForm(false);
       setEditingTodo(null);
       setError(null);
-    } catch (err) {
-      setError('Failed to update todo');
-      console.error(err);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Error in handleUpdateTodo:', error);
+      setError('Failed to update todo: ' + error.message);
     }
   };
 
   // Toggle todo completion status
   const handleToggleTodo = async (id, completed) => {
     try {
+      console.log('Toggling todo with ID:', id);
+      console.log('New completed status:', completed);
+      
+      // Make sure id is defined
+      if (!id) {
+        throw new Error('Todo ID is missing');
+      }
+      
+      // Call update function with just the completed field
       const updatedTodo = await updateTodo(id, { completed });
-      setTodos(todos.map(todo => (todo.id === id ? updatedTodo : todo)));
-    } catch (err) {
-      setError('Failed to update todo');
-      console.error(err);
+      
+      // Update state with the updated todo
+      setTodos(todos.map(todo => 
+        (todo._id === id || todo.id === id) ? updatedTodo : todo
+      ));
+      
+      setError(null);
+    } catch (error) {
+      console.error('Error in handleToggleTodo:', error);
+      setError('Failed to update todo status: ' + error.message);
     }
   };
 
   // Delete a todo
   const handleDeleteTodo = async (id) => {
     try {
+      // Make sure id is defined
+      if (!id) {
+        throw new Error('Todo ID is missing');
+      }
+      
       await deleteTodo(id);
-      setTodos(todos.filter(todo => todo.id !== id));
+      
+      // Update state by removing the deleted todo
+      setTodos(todos.filter(todo => todo._id !== id && todo.id !== id));
+      
+      setError(null);
     } catch (err) {
-      setError('Failed to delete todo');
+      setError('Failed to delete todo: ' + err.message);
       console.error(err);
     }
   };
 
   // Edit a todo (set for editing)
   const handleEditTodo = (todo) => {
+    console.log('Todo to edit:', todo);
+    
+    // Make sure the todo has an ID
+    if (!todo || (!todo._id && !todo.id)) {
+      console.error('Attempted to edit a todo without an ID:', todo);
+      setError('Cannot edit this todo - missing ID');
+      return;
+    }
+    
     setEditingTodo(todo);
     setShowAddForm(true);
   };
@@ -128,7 +174,10 @@ const TodoList = () => {
         {showAddForm && (
           <div className="mb-6">
             <TodoForm
-              onSubmit={editingTodo ? (data) => handleUpdateTodo(editingTodo.id, data) : handleAddTodo}
+              onSubmit={editingTodo 
+                ? (data) => handleUpdateTodo(editingTodo._id || editingTodo.id, data) 
+                : handleAddTodo
+              }
               initialData={editingTodo}
               isEditing={!!editingTodo}
             />
@@ -186,11 +235,11 @@ const TodoList = () => {
           ) : (
             filteredTodos.map((todo) => (
               <TodoItem
-                key={todo.id}
+                key={todo._id || todo.id}
                 todo={todo}
                 onToggle={handleToggleTodo}
                 onEdit={() => handleEditTodo(todo)}
-                onDelete={() => handleDeleteTodo(todo.id)}
+                onDelete={() => handleDeleteTodo(todo._id || todo.id)}
               />
             ))
           )}

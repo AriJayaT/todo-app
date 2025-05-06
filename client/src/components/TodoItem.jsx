@@ -25,6 +25,11 @@ const TodoItem = ({ todo, onToggle, onEdit, onDelete }) => {
     return date.toLocaleDateString();
   };
 
+  // Get the correct ID (support both _id and id)
+  const getTodoId = () => {
+    return todo._id || todo.id;
+  };
+
   return (
     <div className="card hover:border-primary-light transition-colors">
       <div className="flex items-center justify-between">
@@ -32,8 +37,8 @@ const TodoItem = ({ todo, onToggle, onEdit, onDelete }) => {
           <input
             type="checkbox"
             checked={todo.completed}
-            onChange={() => onToggle(todo.id, !todo.completed)}
-            className="h-5 w-5 rounded border-gray-600 text-primary focus:ring-primary mr-3"
+            onChange={() => onToggle(getTodoId(), !todo.completed)}
+            className="h-5 w-5 rounded border-gray-600 text-purple-600 focus:ring-purple-600 mr-3"
           />
           <div className="flex-1">
             <h3 
@@ -79,7 +84,7 @@ const TodoItem = ({ todo, onToggle, onEdit, onDelete }) => {
             )}
           </button>
           <button
-            onClick={onEdit}
+            onClick={() => onEdit(todo)}
             className="p-1 text-gray-400 hover:text-primary"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -87,7 +92,7 @@ const TodoItem = ({ todo, onToggle, onEdit, onDelete }) => {
             </svg>
           </button>
           <button
-            onClick={onDelete}
+            onClick={() => onDelete(getTodoId())}
             className="p-1 text-gray-400 hover:text-red-500"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
