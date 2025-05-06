@@ -1,0 +1,44 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #111827;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-md text-white font-medium transition-colors duration-300 focus:outline-none;
+  }
+  
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-dark;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary-dark border border-gray-700;
+  }
+  
+  .input {
+    @apply w-full px-3 py-2 bg-secondary-light border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary;
+  }
+  
+  .card {
+    @apply bg-secondary-light p-6 rounded-lg border border-gray-700 shadow-md;
+  }
+}
