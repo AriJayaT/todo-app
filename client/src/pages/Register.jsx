@@ -48,7 +48,7 @@ const Register = () => {
       ) {
         setError(err.response.data.message);
       } else if (
-        err.message?.toLowerCase().includes('email') &&
+        err.message?.toLowerCase().includes('email') && 
         err.message?.toLowerCase().includes('already')
       ) {
         setError('This email is already registered. Please log in instead.');
