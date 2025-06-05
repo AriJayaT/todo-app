@@ -32,7 +32,7 @@ const Dashboard = () => {
   const pendingTodos = todos.length - completedTodos;
 
   return (
-    <div className="min-h-screen bg-secondary">
+    <div className="min-h-screen bg-secondary text-white">
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -60,11 +60,11 @@ const Dashboard = () => {
                 </div>
                 <div className="flex justify-between items-center p-3 bg-secondary-dark rounded-lg">
                   <span>Completed</span>
-                  <span className="text-xl font-semibold text-green-500">{completedTodos}</span>
+                  <span className="text-xl font-semibold text-green-400">{completedTodos}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-secondary-dark rounded-lg">
                   <span>Pending</span>
-                  <span className="text-xl font-semibold text-yellow-500">{pendingTodos}</span>
+                  <span className="text-xl font-semibold text-yellow-400">{pendingTodos}</span>
                 </div>
               </div>
             )}
@@ -114,16 +114,16 @@ const Dashboard = () => {
                   className="flex items-center justify-between p-3 bg-secondary-dark rounded-lg"
                 >
                   <div className="flex items-center">
-                    <div className={`h-3 w-3 rounded-full mr-3 ${todo.completed ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                    <div className={`h-3 w-3 rounded-full mr-3 ${todo.completed ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
                     <span className={todo.completed ? 'line-through text-gray-500' : ''}>{todo.title}</span>
                   </div>
                   <div className="text-sm text-gray-400">
                     {todo.priority === 'high' ? (
-                      <span className="text-red-500">High</span>
+                      <span className="text-red-400">High</span>
                     ) : todo.priority === 'medium' ? (
-                      <span className="text-yellow-500">Medium</span>
+                      <span className="text-yellow-400">Medium</span>
                     ) : (
-                      <span className="text-green-500">Low</span>
+                      <span className="text-green-400">Low</span>
                     )}
                   </div>
                 </div>

@@ -30,6 +30,19 @@ const userSchema = new mongoose.Schema({
   lastName: {
     type: String,
     trim: true
+  },
+  firebaseUid: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true
@@ -50,7 +63,11 @@ userSchema.pre('save', async function(next) {
 
 // Method to compare passwords
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw error;
+  }
 };
 
 const User = mongoose.model('User', userSchema);

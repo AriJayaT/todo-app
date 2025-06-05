@@ -11,8 +11,9 @@ const Register = () => {
     confirmPassword: ''
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const { username, email, password, confirmPassword } = formData;
@@ -24,6 +25,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     // Check if passwords match
     if (password !== confirmPassword) {
@@ -35,117 +37,185 @@ const Register = () => {
 
     try {
       await register({ username, email, password });
+      setSuccess('Registration successful! Please log in to your new account. Redirecting to login...');
+      setTimeout(() => {
+        navigate('/login');
+      }, 1800);
+    } catch (err) {
+      // Always show the same notification for email already in use
+      if (
+        err.response && err.response.data && err.response.data.message
+      ) {
+        setError(err.response.data.message);
+      } else if (
+        err.message?.toLowerCase().includes('email') &&
+        err.message?.toLowerCase().includes('already')
+      ) {
+        setError('This email is already registered. Please log in instead.');
+      } else {
+        setError(err.message || 'Registration failed. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      await loginWithGoogle();
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      setError(err.message || 'Google login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-secondary px-4">
-      <div className="card w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-6 text-primary">Register for Todo App</h1>
-        
-        {error && (
-          <div className="bg-red-500 bg-opacity-20 border border-red-500 text-red-500 px-4 py-3 rounded mb-4">
-            {error}
+    <div className="min-h-screen flex items-center justify-center bg-secondary py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 z-10 flex flex-col">
+        <Link to="/" className="flex items-center gap-2 text-white hover:text-primary transition-colors mb-2 w-fit">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          Back to Dashboard
+        </Link>
+        <h2 className="text-3xl font-extrabold text-white mb-6 text-center">
+          Create your account
+        </h2>
+        <form className="space-y-5 w-full" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-500 bg-opacity-20 p-4 border border-red-500">
+              <div className="text-sm text-red-400">{error}</div>
+            </div>
+          )}
+          {success && (
+            <div className="rounded-md bg-green-500 bg-opacity-20 p-4 border border-green-500 mb-2">
+              <div className="text-sm text-green-400">{success}</div>
+            </div>
+          )}
+          <div className="rounded-md shadow-sm flex flex-col gap-4">
+            <div>
+              <label htmlFor="username" className="sr-only">
+                Username
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                className="input rounded-t-md"
+                placeholder="Username"
+                value={username}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="input"
+                placeholder="Email address"
+                value={email}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                className="input"
+                placeholder="Password"
+                value={password}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="sr-only">
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                className="input rounded-b-md"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={handleChange}
+              />
+            </div>
           </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="username">
-              Username
-            </label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={username}
-              onChange={handleChange}
-              className="input"
-              placeholder="Choose a username"
-              required
-              minLength="3"
-            />
+
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn btn-primary w-full"
+            >
+              {isLoading ? 'Creating account...' : 'Create account'}
+            </button>
           </div>
-          
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="email">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              onChange={handleChange}
-              className="input"
-              placeholder="Enter your email"
-              required
-            />
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="password">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={password}
-              onChange={handleChange}
-              className="input"
-              placeholder="Choose a password"
-              required
-              minLength="6"
-            />
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-sm font-medium mb-1" htmlFor="confirmPassword">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={confirmPassword}
-              onChange={handleChange}
-              className="input"
-              placeholder="Confirm your password"
-              required
-            />
-          </div>
-          
-          <button
-            type="submit"
-            className="btn btn-primary w-full"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Registering...
-              </span>
-            ) : (
-              'Register'
-            )}
-          </button>
         </form>
-        
-        <p className="mt-4 text-center text-sm">
-          Already have an account?{' '}
-          <Link to="/login" className="text-primary hover:underline">
-            Login here
-          </Link>
-        </p>
+
+        <div className="mt-6 w-full">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-secondary-light" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-secondary text-gray-400">Or continue with</span>
+            </div>
+          </div>
+
+          {/* Google Sign In Button */}
+          <button
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="mt-4 w-full flex items-center justify-center gap-2 bg-secondary-light text-white hover:bg-primary px-4 py-2 rounded-lg border border-secondary-dark transition-colors"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
+            </svg>
+            Sign up with Google
+          </button>
+          
+          <p className="mt-4 text-center text-sm">
+            Already have an account?{' '}
+            <Link to="/login" className="text-primary hover:underline">
+              Login here
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

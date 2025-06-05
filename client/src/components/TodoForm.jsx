@@ -58,7 +58,7 @@ const TodoForm = ({ onSubmit, initialData = null, isEditing = false }) => {
             name="title"
             value={formData.title}
             onChange={handleChange}
-            className="input"
+            className="input border-2 border-primary"
             placeholder="What needs to be done?"
             required
           />
@@ -73,7 +73,7 @@ const TodoForm = ({ onSubmit, initialData = null, isEditing = false }) => {
             name="description"
             value={formData.description}
             onChange={handleChange}
-            className="input h-24 resize-none"
+            className="input h-24 resize-none border-2 border-primary"
             placeholder="Add details (optional)"
           />
         </div>
@@ -89,7 +89,7 @@ const TodoForm = ({ onSubmit, initialData = null, isEditing = false }) => {
               name="dueDate"
               value={formData.dueDate}
               onChange={handleChange}
-              className="input"
+              className="input border-2 border-primary"
             />
           </div>
           
@@ -102,7 +102,7 @@ const TodoForm = ({ onSubmit, initialData = null, isEditing = false }) => {
               name="priority"
               value={formData.priority}
               onChange={handleChange}
-              className="input"
+              className="input border-2 border-primary"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>

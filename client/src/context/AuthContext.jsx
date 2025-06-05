@@ -1,5 +1,13 @@
 // src/context/AuthContext.jsx
 import { createContext, useState, useEffect, useContext } from 'react';
+import { 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from 'firebase/auth';
+import { auth, googleProvider } from '../config/firebase';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -15,34 +23,57 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is logged in on initial load
   useEffect(() => {
-    const checkLoggedIn = async () => {
-      try {
-        const res = await axios.get('/api/auth/me', {
-          withCredentials: true
-        });
-        setUser(res.data.user);
-      } catch (err) {
-        // User is not logged in
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Get the Firebase ID token
+          const idToken = await firebaseUser.getIdToken();
+          
+          // Verify the token with our backend
+          const res = await axios.post('/api/auth/firebase', { idToken }, {
+            withCredentials: true
+          });
+          
+          setUser(res.data.user);
+        } catch (err) {
+          console.error('Error verifying Firebase token:', err);
+          setUser(null);
+        }
+      } else {
         setUser(null);
-      } finally {
-        setLoading(false);
       }
-    };
+      setLoading(false);
+    });
 
-    checkLoggedIn();
+    return () => unsubscribe();
   }, []);
 
   // Register user
   const register = async (userData) => {
     try {
       setError(null);
-      const res = await axios.post('/api/auth/register', userData, {
+      // Create user in Firebase
+      const { user: firebaseUser } = await createUserWithEmailAndPassword(
+        auth,
+        userData.email,
+        userData.password
+      );
+
+      // Get the Firebase ID token
+      const idToken = await firebaseUser.getIdToken();
+
+      // Register user in our backend
+      const res = await axios.post('/api/auth/register', {
+        ...userData,
+        firebaseUid: firebaseUser.uid
+      }, {
         withCredentials: true
       });
+
       setUser(res.data.user);
       return res.data;
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.message || 'Registration failed');
       throw err;
     }
   };
@@ -51,13 +82,48 @@ export const AuthProvider = ({ children }) => {
   const login = async (userData) => {
     try {
       setError(null);
-      const res = await axios.post('/api/auth/login', userData, {
+      // Sign in with Firebase
+      const { user: firebaseUser } = await signInWithEmailAndPassword(
+        auth,
+        userData.email,
+        userData.password
+      );
+
+      // Get the Firebase ID token
+      const idToken = await firebaseUser.getIdToken();
+
+      // Login with our backend
+      const res = await axios.post('/api/auth/firebase', { idToken }, {
         withCredentials: true
       });
+
       setUser(res.data.user);
       return res.data;
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.message || 'Login failed');
+      throw err;
+    }
+  };
+
+  // Login with Google
+  const loginWithGoogle = async () => {
+    try {
+      setError(null);
+      // Sign in with Google
+      const { user: firebaseUser } = await signInWithPopup(auth, googleProvider);
+
+      // Get the Firebase ID token
+      const idToken = await firebaseUser.getIdToken();
+
+      // Login with our backend
+      const res = await axios.post('/api/auth/firebase', { idToken }, {
+        withCredentials: true
+      });
+
+      setUser(res.data.user);
+      return res.data;
+    } catch (err) {
+      setError(err.message || 'Google login failed');
       throw err;
     }
   };
@@ -65,12 +131,17 @@ export const AuthProvider = ({ children }) => {
   // Logout user
   const logout = async () => {
     try {
+      // Sign out from Firebase
+      await signOut(auth);
+      
+      // Logout from our backend
       await axios.get('/api/auth/logout', {
         withCredentials: true
       });
+      
       setUser(null);
     } catch (err) {
-      setError(err.response?.data?.message || 'Logout failed');
+      setError(err.message || 'Logout failed');
       throw err;
     }
   };
@@ -85,7 +156,7 @@ export const AuthProvider = ({ children }) => {
       setUser(res.data.user);
       return res.data;
     } catch (err) {
-      setError(err.response?.data?.message || 'Profile update failed');
+      setError(err.message || 'Profile update failed');
       throw err;
     }
   };
@@ -96,6 +167,7 @@ export const AuthProvider = ({ children }) => {
     error,
     register,
     login,
+    loginWithGoogle,
     logout,
     updateProfile
   };

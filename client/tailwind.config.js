@@ -8,16 +8,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: {
-          light: '#9333ea', // purple-600
-          DEFAULT: '#7e22ce', // purple-700
-          dark: '#6b21a8', // purple-800
-        },
-        secondary: {
-          light: '#1f2937', // gray-800
-          DEFAULT: '#111827', // gray-900
-          dark: '#030712', // gray-950
-        }
+        primary: '#9333EA',    // Purple
+        'primary-dark': '#7E22CE', // Darker Purple
+        'primary-light': '#A855F7', // Lighter Purple
+        secondary: '#18181B',  // Dark Gray/Black
+        'secondary-dark': '#09090B', // Darker Black
+        'secondary-light': '#27272A', // Lighter Black
+        accent: '#C084FC',     // Light Purple
+        'accent-dark': '#A855F7', // Darker Light Purple
+        'accent-light': '#D8B4FE', // Lighter Light Purple
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

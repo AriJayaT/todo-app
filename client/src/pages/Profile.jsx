@@ -76,7 +76,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-secondary">
+    <div className="min-h-screen bg-secondary text-white">
       <Navbar />
       
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -156,19 +156,19 @@ const Profile = () => {
               
               {/* Alert messages */}
               {error && (
-                <div className="bg-red-500 bg-opacity-20 border border-red-500 text-red-500 px-4 py-3 rounded mb-4">
+                <div className="bg-red-500 bg-opacity-20 border border-red-500 text-red-400 px-4 py-3 rounded mb-4">
                   {error}
                 </div>
               )}
               
               {authError && (
-                <div className="bg-red-500 bg-opacity-20 border border-red-500 text-red-500 px-4 py-3 rounded mb-4">
+                <div className="bg-red-500 bg-opacity-20 border border-red-500 text-red-400 px-4 py-3 rounded mb-4">
                   {authError}
                 </div>
               )}
               
               {success && (
-                <div className="bg-green-500 bg-opacity-20 border border-green-500 text-green-500 px-4 py-3 rounded mb-4">
+                <div className="bg-green-500 bg-opacity-20 border border-green-500 text-green-400 px-4 py-3 rounded mb-4">
                   {success}
                 </div>
               )}

@@ -1,7 +1,7 @@
 // routes/auth.routes.js
 const express = require('express');
-const { check } = require('express-validator');
 const authController = require('../controllers/auth.controller');
+const { check } = require('express-validator');
 const authMiddleware = require('../middleware/auth.middleware');
 
 const router = express.Router();
@@ -48,12 +48,13 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post(
-  '/register',
+
+// Regular auth routes
+router.post('/register',
   [
     check('username', 'Username is required').not().isEmpty(),
     check('email', 'Please include a valid email').isEmail(),
-    check('password', 'Password must be at least 6 characters').isLength({ min: 6 })
+    check('password', 'Password must be 6 or more characters').isLength({ min: 6 })
   ],
   authController.register
 );
@@ -86,14 +87,40 @@ router.post(
  *       500:
  *         description: Server error
  */
-router.post(
-  '/login',
+router.post('/login',
   [
     check('email', 'Please include a valid email').isEmail(),
     check('password', 'Password is required').exists()
   ],
   authController.login
 );
+
+/**
+ * @swagger
+ * /api/auth/firebase:
+ *   post:
+ *     summary: Verify Firebase token and login/register user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idToken
+ *             properties:
+ *               idToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Firebase authentication successful
+ *       401:
+ *         description: Invalid Firebase token
+ *       500:
+ *         description: Server error
+ */
+router.post('/firebase', authController.verifyFirebaseToken);
 
 /**
  * @swagger
